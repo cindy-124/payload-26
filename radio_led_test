@@ -1,0 +1,47 @@
+#include <WiFi.h>
+#include <esp_bt.h>
+
+int pwmPin1 = 1;
+bool eject;
+unsigned long highTime, lowTime;
+float dutyCycle, frequency;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(pwmPin1, INPUT);
+  digitalWrite(LED_BUILTIN, LOW); 
+
+
+  // Disable WiFi and Bluetooth
+  WiFi.mode(WIFI_OFF);
+  btStop();         // fully disables Bluetooth
+  eject = false;
+}
+
+void loop() {
+  eject = false;
+   highTime = pulseIn(pwmPin1, HIGH);  // microseconds signal is HIGH
+  lowTime  = pulseIn(pwmPin1, LOW);   // microseconds signal is LOW
+  
+  unsigned long period = highTime + lowTime;  // total period in µs
+
+  if (period > 0) {
+    frequency = 1000000.0 / period;  // Hz
+    dutyCycle = (highTime * 100.0) / period;  // %
+    
+    Serial.print("Duty Cycle: ");
+    Serial.print(dutyCycle);
+    Serial.print("%   Frequency: ");
+    Serial.print(frequency);
+    Serial.println(" Hz");
+    if (dutyCycle > 9) {
+      eject = true;
+    }
+  }
+  if (eject)   digitalWrite(LED_BUILTIN, HIGH);
+  else   digitalWrite(LED_BUILTIN, LOW);
+
+
+}
+
